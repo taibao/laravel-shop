@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests\AddCartRequest;
+use App\Models\Product;
 use App\Services\CartService;
+use Ar414\RedisLock;
 
 class TestController extends Controller
 {
@@ -30,14 +31,36 @@ class TestController extends Controller
 
     }
 
-    /**
-     * @param AddCartRequest $request
-     * @return array
-     */
-    public function add(AddCartRequest $request)
+    public function change_save(Request $request)
     {
-        $this->cartService->add($request->input('sku_id'), $request->input('amount'));
+        //悲观锁
+        $redis = new \Redis();
+        $redis->connect('127.0.0.1','6397');
 
-        return [];
+        $lockTimeOut = 5;
+        $redisLock = new RedisLock($redis,$lockTimeOut);
+
+        $lockKey = 'lock:user:wallet:uid:1001';
+        $lockExpire = $redisLock->getLock($lockKey); //设置每个锁的最长使用时间
+
+        try{
+            if(!$lockExpire||$lockExpire<time()){
+                $redisLock->releaseLock($lockKey,$lockExpire);
+                throw new \Exception('Busy Lock');
+            }else{
+                $data = [
+                    'id'=>$request->get("id"),
+                ];
+
+                $pro = new Product();
+                $num =  $pro->change_save($data);
+                echo $num;
+                $redisLock->releaseLock($lockKey,$lockExpire);
+            }
+        }catch (Exception $e){
+                echo $e->getMessage();
+        }
     }
+
+
 }

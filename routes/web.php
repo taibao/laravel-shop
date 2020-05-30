@@ -16,7 +16,7 @@ Route::get('products', 'ProductsController@index')->name('products.index');
 //Route::get('products', 'ProductsController@index')->name('products.index');
 
 Route::get('test', 'TestController@index');
-Route::get('test_add', 'TestController@add');
+Route::get('test_update', 'TestController@change_save');
 
 Auth::routes(['verify' => true]);
 

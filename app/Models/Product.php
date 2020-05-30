@@ -20,6 +20,15 @@ class Product extends Model
         return $this->hasMany(ProductSku::class);
     }
 
+    public  function change_save($map){
+        $data = Self::select("sold_count")->where('id', $map['id'])->first()->toArray();
+        $data['sold_count'] = $data['sold_count']+1;
+//        Self::where('id', $map['id'])->increment("sold_count","1");
+        Self::where('id', $map['id'])->update($data);
+        return $data['sold_count'];
+    }
+
+
     public function getImageUrlAttribute()
     {
         // 如果 image 字段本身就已经是完整的 url 就直接返回
